@@ -2,117 +2,103 @@
 using System.Threading.Tasks;
 using System.Numerics;
 using Nethereum.Web3;
+using Nethereum.Web3.Accounts;
 using Nethereum.Contracts;
-
+using DotNetEnv;
 class Program
 {
-    // --- 1. CONFIGURACIÓN ---
-    // PEGA AQUÍ TU URL DE ALCHEMY (La misma que usas en Foundry)
-    static string rpcUrl = "https://eth-mainnet.g.alchemy.com/v2/xWz8OndQ0A-LfRt8sdxB3";
+    // --- CONFIGURACIÓN DE LA FUSIÓN ---
     
-    // Direcciones de Contratos en Mainnet
-    static string SUSHI_ROUTER = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F";
-    static string UNI_QUOTER = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6"; // Quoter V1
+    // 1. CONEXIÓN: Usamos TU Anvil local (No Alchemy directo) para poder ejecutar
+    static string anvilUrl = "http://127.0.0.1:8545";
     
-    static string WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+    // 2. CUENTA: La clave privada #0 de Anvil (El millonario de la simulación)
+    static string privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+
+    // 3. OBJETIVO: La dirección de TU contrato desplegado (Sacada de tu captura)
+    static string botAddress = "0xE5D42D6E49e8d2C2089D769Ef10D35f45a3c1cCb";
+
+    // Direcciones de Monedas
     static string DAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
 
     static async Task Main(string[] args)
     {
-        Console.WriteLine("🦈 INICIANDO CEREBRO MULTI-DEX...");
-        var web3 = new Web3(rpcUrl);
+
+        // 1. CARGAMOS EL ARCHIVO SECRETO
+        Env.Load();
+        
+        // 2. LEEMOS LA CLAVE (Solo si la necesitamos para conectar a Mainnet)
+        string alchemyKey = Environment.GetEnvironmentVariable("ALCHEMY_KEY");
+        
+        Console.WriteLine("🔌 CONECTANDO CEREBRO A CUERPO (ANVIL)...");
+        
+        // Creamos la cuenta con la clave privada para poder firmar transacciones
+        var account = new Account(privateKey, 31337); // 31337 es el ChainId de Anvil
+        var web3 = new Web3(account, anvilUrl);
 
         try
         {
-            // Verificamos conexión consultando el bloque actual
-            var blockNumber = await web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
-            Console.WriteLine($"✅ Conectado a Ethereum Mainnet. Bloque: {blockNumber}");
-            
+            var netVersion = await web3.Net.Version.SendRequestAsync();
+            Console.WriteLine($"✅ Conectado a Red Local (ChainID: {netVersion})");
+            Console.WriteLine($"🤖 Objetivo fijado: {botAddress}");
+            Console.WriteLine("---------------------------------------------");
+
             while (true)
             {
-                Console.WriteLine("---------------------------------------------");
-                Console.WriteLine("🔎 Buscando precios para 1 WETH -> DAI...");
+                Console.WriteLine("\nPresiona [ENTER] para DISPARAR el Arbitraje (o 'Ctrl+C' para salir)");
+                Console.ReadLine(); // Espera a que des Enter
 
-                // 1. Obtener precio de SUSHISWAP (V2)
-                decimal sushiPrice = await GetSushiPrice(web3);
-                Console.WriteLine($"🍣 SushiSwap: {sushiPrice:F2} DAI");
+                Console.WriteLine("🔫 ¡FUEGO! Iniciando Flash Loan...");
 
-                // 2. Obtener precio de UNISWAP (V3)
-                decimal uniPrice = await GetUniPrice(web3);
-                Console.WriteLine($"🦄 Uniswap V3: {uniPrice:F2} DAI");
+                // 1. Definimos la función que vamos a llamar (ABI)
+                string abi = @"[{
+                    'inputs': [{'internalType': 'address', 'name': 'token', 'type': 'address'}, {'internalType': 'uint256', 'name': 'cantidad', 'type': 'uint256'}],
+                    'name': 'iniciarArbitraje',
+                    'outputs': [],
+                    'stateMutability': 'nonpayable',
+                    'type': 'function'
+                }]";
 
-                // 3. Calcular Diferencia (SPREAD)
-                decimal diff = uniPrice - sushiPrice;
-                Console.WriteLine($"📊 Diferencia: {diff:F2} DAI");
+                var contract = web3.Eth.GetContract(abi, botAddress);
+                var funcionArbitraje = contract.GetFunction("iniciarArbitraje");
 
-                if (diff > 0)
-                    Console.ForegroundColor = ConsoleColor.Green;
-                else
-                    Console.ForegroundColor = ConsoleColor.Red;
+                // 2. Preparamos el disparo (1,000 DAI)
+                var cantidad = Web3.Convert.ToWei(1000); // 1000 DAI
                 
-                Console.WriteLine($"👉 {(diff > 0 ? "Uniswap paga más" : "SushiSwap paga más")}");
-                Console.ResetColor();
+                // 3. Estimamos Gas y Enviamos
+                try 
+                {
+                    var gas = await funcionArbitraje.EstimateGasAsync(botAddress, null, null, DAI, cantidad);
+                    Console.WriteLine($"⛽ Gas Estimado: {gas}");
 
-                // Esperar 5 segundos antes de volver a mirar
-                await Task.Delay(5000);
+                    var receipt = await funcionArbitraje.SendTransactionAndWaitForReceiptAsync(botAddress, gas, null, null, DAI, cantidad);
+                    
+                    Console.WriteLine("---------------------------------------------");
+                    if (receipt.Status.Value == 1)
+                    {
+                         Console.ForegroundColor = ConsoleColor.Green;
+                         Console.WriteLine($"🏆 ÉXITO: Transacción Confirmada! Hash: {receipt.TransactionHash}");
+                    }
+                    else
+                    {
+                         Console.ForegroundColor = ConsoleColor.Red;
+                         Console.WriteLine($"💀 FALLO: La transacción revirtió (Posiblemente falta de fondos para repagar).");
+                         Console.WriteLine($"Hash: {receipt.TransactionHash}");
+                    }
+                    Console.ResetColor();
+                }
+                catch (Exception ex)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"❌ ERROR AL EJECUTAR: {ex.Message}");
+                    Console.WriteLine("NOTA: Es normal que falle si el bot no tiene saldo extra para cubrir las pérdidas del arbitraje.");
+                    Console.ResetColor();
+                }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ ERROR CRÍTICO: {ex.Message}");
+            Console.WriteLine($"❌ ERROR DE CONEXIÓN: {ex.Message}");
         }
-    }
-
-    // --- FUNCIONES AUXILIARES PARA LEER PRECIOS ---
-
-    static async Task<decimal> GetSushiPrice(Web3 web3)
-    {
-        // ABI Mínimo del Router de Sushi (getAmountsOut)
-        string abi = @"[{
-            'constant': true,
-            'inputs': [{'name': 'amountIn', 'type': 'uint256'}, {'name': 'path', 'type': 'address[]'}],
-            'name': 'getAmountsOut',
-            'outputs': [{'name': 'amounts', 'type': 'uint256[]'}],
-            'type': 'function'
-        }]";
-
-        var contract = web3.Eth.GetContract(abi, SUSHI_ROUTER);
-        var function = contract.GetFunction("getAmountsOut");
-
-        // Preguntamos: "Si te doy 1 WETH (10^18), ¿cuántos DAI me das?"
-        var amountIn = Web3.Convert.ToWei(1); 
-        var path = new string[] { WETH, DAI };
-
-        var result = await function.CallAsync<System.Collections.Generic.List<BigInteger>>(amountIn, path);
-        
-        // El resultado es una lista: [Input, Output]. Queremos el segundo (Output).
-        var amountOut = result[1];
-        
-        // Convertimos de Wei (18 decimales) a Human Readable
-        return Web3.Convert.FromWei(amountOut);
-    }
-
-    static async Task<decimal> GetUniPrice(Web3 web3)
-    {
-        // ABI Mínimo del Quoter de Uniswap V3 (quoteExactInputSingle)
-        string abi = @"[{
-            'inputs': [{'name': 'tokenIn', 'type': 'address'}, {'name': 'tokenOut', 'type': 'address'}, {'name': 'fee', 'type': 'uint24'}, {'name': 'amountIn', 'type': 'uint256'}, {'name': 'sqrtPriceLimitX96', 'type': 'uint160'}],
-            'name': 'quoteExactInputSingle',
-            'outputs': [{'name': 'amountOut', 'type': 'uint256'}],
-            'stateMutability': 'view',
-            'type': 'function'
-        }]";
-
-        var contract = web3.Eth.GetContract(abi, UNI_QUOTER);
-        var function = contract.GetFunction("quoteExactInputSingle");
-
-        // Parámetros para Uniswap V3
-        var amountIn = Web3.Convert.ToWei(1);
-        uint fee = 3000; // 0.3%
-        BigInteger sqrtPriceLimitX96 = 0;
-
-        var amountOut = await function.CallAsync<BigInteger>(WETH, DAI, fee, amountIn, sqrtPriceLimitX96);
-
-        return Web3.Convert.FromWei(amountOut);
     }
 }

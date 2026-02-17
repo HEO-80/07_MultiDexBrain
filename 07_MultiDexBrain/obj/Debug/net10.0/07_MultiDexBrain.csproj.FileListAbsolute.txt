@@ -37,3 +37,8 @@ C:\Cursos\BlockChain\Nivel 2\Multi-Dex\07_MultiDexBrain\07_MultiDexBrain\obj\Deb
 C:\Cursos\BlockChain\Nivel 2\Multi-Dex\07_MultiDexBrain\07_MultiDexBrain\obj\Debug\net10.0\07_MultiDexBrain.pdb
 C:\Cursos\BlockChain\Nivel 2\Multi-Dex\07_MultiDexBrain\07_MultiDexBrain\obj\Debug\net10.0\07_MultiDexBrain.genruntimeconfig.cache
 C:\Cursos\BlockChain\Nivel 2\Multi-Dex\07_MultiDexBrain\07_MultiDexBrain\obj\Debug\net10.0\ref\07_MultiDexBrain.dll
+C:\Cursos\BlockChain\Nivel 2\Multi-Dex\07_MultiDexBrain\07_MultiDexBrain\bin\Debug\net10.0\DotNetEnv.dll
+C:\Cursos\BlockChain\Nivel 2\Multi-Dex\07_MultiDexBrain\07_MultiDexBrain\bin\Debug\net10.0\Microsoft.Extensions.Configuration.dll
+C:\Cursos\BlockChain\Nivel 2\Multi-Dex\07_MultiDexBrain\07_MultiDexBrain\bin\Debug\net10.0\Microsoft.Extensions.Configuration.Abstractions.dll
+C:\Cursos\BlockChain\Nivel 2\Multi-Dex\07_MultiDexBrain\07_MultiDexBrain\bin\Debug\net10.0\Microsoft.Extensions.Primitives.dll
+C:\Cursos\BlockChain\Nivel 2\Multi-Dex\07_MultiDexBrain\07_MultiDexBrain\bin\Debug\net10.0\Sprache.dll
