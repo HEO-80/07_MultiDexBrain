@@ -1,80 +1,240 @@
-# 🧠 Multi-Dex Brain (C# Backend)
+<div align="center">
 
-Este repositorio contiene el controlador *off-chain* desarrollado en C# (.NET) diseñado para coordinar y ejecutar operaciones de arbitraje a través de múltiples exchanges descentralizados (Multi-Dex).
+# 🧠 Multi-DEX Brain V2 — Evolved Arbitrage Controller
 
-## 🛠️ Especificaciones Técnicas
+<img src="https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=csharp&logoColor=white"/>
+<img src="https://img.shields.io/badge/.NET-512BD4?style=for-the-badge&logo=dotnet&logoColor=white"/>
+<img src="https://img.shields.io/badge/Nethereum-3C3C3D?style=for-the-badge&logo=ethereum&logoColor=white"/>
+<img src="https://img.shields.io/badge/Alchemy-363FF9?style=for-the-badge&logo=alchemy&logoColor=white"/>
 
-La aplicación es un cliente de consola construido en .NET que utiliza la librería `Nethereum` para gestionar el ciclo de vida completo de una transacción en la blockchain.
+**Evolution of `06_MultiDexArbitrage` — refined architecture, same battle-tested core**
 
-El flujo de ejecución principal (`Program.cs`) implementa las siguientes operaciones de red:
-1.  **Estimación de Gas Previa:** Utiliza el método `EstimateGasAsync` para simular la transacción en el nodo local antes de emitirla. Esto permite calcular el coste computacional exacto requerido y evitar transacciones fallidas por falta de límite de gas.
-2.  **Ejecución Síncrona:** Emplea `SendTransactionAndWaitForReceiptAsync` para construir, firmar, emitir la transacción a la red y pausar la ejecución del programa local hasta que el bloque es minado y la red devuelve un recibo de confirmación.
-3.  **Evaluación de Estado (Receipt Status):** Analiza el valor booleano del recibo (`receipt.Status.Value`). 
-    * Un valor de `1` activa el bloque de éxito, confirmando que el arbitraje se ejecutó y generó ganancias.
-    * Un valor de `0` activa el bloque de fallo (revert), indicando que el Smart Contract detectó una pérdida potencial y canceló la operación para proteger los fondos.
+*Gas estimation → atomic execution → receipt validation. Now with cleaner separation of concerns.*
 
----
+**🌍 [English](#-english-version) · 🇪🇸 [Español](#-versión-en-español)**
 
-## 🏎️ Arquitectura Conceptual
-
-Para visualizar la interacción entre este código C# y la blockchain, utilizaremos la analogía de una torre de control aéreo:
-
-* **La Torre de Control (Este código C#):** Analiza las rutas disponibles, calcula exactamente cuánto combustible requerirá el viaje (Estimación de Gas) y da la orden de despegue. Una vez enviada la orden, se queda a la escucha en la radio hasta confirmar que la operación se completó con éxito (Status 1) o si la misión tuvo que ser abortada (Status 0).
-* **El Avión (El Smart Contract):** Es la entidad física que realiza el viaje en la blockchain. Sigue las instrucciones de la torre, pero tiene la capacidad de abortar el aterrizaje de emergencia si las condiciones de la pista (los precios de los tokens) cambian en el último milisegundo.
-
-## 🚀 Configuración y Ejecución
-
-Para iniciar el controlador, asegúrate de tener las credenciales configuradas.
-
-1.  Crea un archivo llamado `.env` en la raíz de este proyecto:
-    ```ini
-    ALCHEMY_URL=https://...
-    PRIVATE_KEY=...
-    BOT_ADDRESS=...
-    ```
-2.  Abre la terminal en la carpeta del proyecto y compila/ejecuta el programa:
-    ```bash
-    dotnet run
-    ```
-
----
----
-
-# 🧠 Multi-Dex Brain (C# Backend) [EN]
-
-This repository contains the *off-chain* controller developed in C# (.NET) designed to coordinate and execute arbitrage operations across multiple decentralized exchanges (Multi-Dex).
-
-## 🛠️ Technical Specifications
-
-The application is a .NET console client utilizing the `Nethereum` library to manage the complete lifecycle of a blockchain transaction.
-
-The main execution flow (`Program.cs`) implements the following network operations:
-1.  **Prior Gas Estimation:** Uses the `EstimateGasAsync` method to simulate the transaction on the local node before broadcasting it. This calculates the exact computational cost required and prevents failed transactions due to an insufficient gas limit.
-2.  **Synchronous Execution:** Employs `SendTransactionAndWaitForReceiptAsync` to build, sign, broadcast the transaction to the network, and pause the local program execution until the block is mined and the network returns a confirmation receipt.
-3.  **State Evaluation (Receipt Status):** Analyzes the boolean value of the receipt (`receipt.Status.Value`). 
-    * A value of `1` triggers the success block, confirming the arbitrage was executed and generated profit.
-    * A value of `0` triggers the failure block (revert), indicating the Smart Contract detected a potential loss and canceled the operation to protect the funds.
+</div>
 
 ---
 
-## 🏎️ Conceptual Architecture
+## 🇪🇸 Versión en Español
 
-To visualize the interaction between this C# code and the blockchain, we use the analogy of an air traffic control tower:
+### 📈 ¿Por qué existe este repositorio?
 
-* **The Control Tower (This C# code):** It analyzes the available routes, calculates exactly how much fuel the trip will require (Gas Estimation), and gives the takeoff order. Once the order is sent, it listens on the radio until it confirms that the operation was successfully completed (Status 1) or if the mission had to be aborted (Status 0).
-* **The Airplane (The Smart Contract):** It is the physical entity making the journey on the blockchain. It follows the tower's instructions but has the ability to perform an emergency abort if runway conditions (token prices) change at the last millisecond.
+`07_MultiDexBrain` es la **evolución directa de `06_MultiDexArbitrage`**. Mantiene el mismo núcleo battle-tested — estimación de gas, ejecución síncrona y validación de recibo — pero con una arquitectura más limpia y preparada para escalar hacia versiones más complejas del ecosistema.
 
-## 🚀 Setup & Execution
+> Cada repo de esta serie es un peldaño. El 06 demostró que el ciclo funcionaba. El 07 lo consolida antes de añadir más complejidad.
 
-To start the controller, ensure your credentials are set up.
+---
 
-1.  Create a `.env` file in the root of this project:
-    ```ini
-    ALCHEMY_URL=https://...
-    PRIVATE_KEY=...
-    BOT_ADDRESS=...
-    ```
-2.  Open the terminal in the project folder and build/run the program:
-    ```bash
-    dotnet run
-    ```
+### 🔄 06 vs 07 — ¿Qué cambió?
+
+| Característica | `06_MultiDexArbitrage` | `07_MultiDexBrain` *(este)* |
+|:---|:---|:---|
+| Núcleo de ejecución | ✅ Funcional | ✅ Refactorizado |
+| Separación de responsabilidades | Básica | Mejorada |
+| Preparación para escalar | Limitada | ✅ Base para versiones 08+ |
+| Estructura del proyecto | Plana | Organizada por módulos |
+| Configuración `.env` | ✅ | ✅ |
+
+---
+
+### ⚙️ Flujo de Ejecución
+```
+Program.cs
+    │
+    ├── 1. Cargar credenciales (.env)
+    │       └── ALCHEMY_URL · PRIVATE_KEY · BOT_ADDRESS
+    │
+    ├── 2. Estimación de gas previa
+    │       └── EstimateGasAsync()
+    │           ├── Simula la TX antes de emitirla
+    │           └── Evita transacciones fallidas por gas insuficiente
+    │
+    ├── 3. Ejecución síncrona
+    │       └── SendTransactionAndWaitForReceiptAsync()
+    │           ├── Construye + firma + emite la TX
+    │           └── Espera confirmación del bloque minado
+    │
+    └── 4. Evaluación del recibo
+            ├── Status = 1 ✅ → arbitraje ejecutado con beneficio
+            └── Status = 0 ❌ → revert automático → fondos protegidos
+```
+
+---
+
+### 🗼 La Torre de Control
+
+> **La Torre *(este código)*** calcula el combustible exacto, da la orden de despegue y espera en la radio hasta confirmar *(Status 1)* o abortar *(Status 0)*.
+>
+> **El Avión *(el Smart Contract)*** ejecuta el viaje en la blockchain y puede hacer un **abort de emergencia** si los precios cambian en el último milisegundo.
+
+---
+
+### 🛠️ Tech Stack
+
+| Capa | Tecnología |
+|:---|:---|
+| Lenguaje | C# / .NET 10.0 |
+| Web3 Integration | Nethereum |
+| Nodo RPC | Alchemy |
+| Seguridad | DotNetEnv (.env) |
+
+---
+
+### 🏗️ Estructura del Proyecto
+```
+07_MultiDexBrain/
+├── 07_MultiDexBrain/
+│   └── Program.cs              # Controlador principal
+├── 07_MultiDexBrain.sln        # Solución .NET
+├── .env                        # Credenciales (NO subir a Git)
+└── README.md
+```
+
+---
+
+### 🚀 Configuración y Ejecución
+
+**1. Crear `.env` en la raíz**
+```env
+ALCHEMY_URL=https://eth-mainnet.g.alchemy.com/v2/TU_API_KEY
+PRIVATE_KEY=TU_CLAVE_PRIVADA
+BOT_ADDRESS=0x_DIRECCION_DEL_CONTRATO
+```
+
+**2. Ejecutar**
+```bash
+dotnet run
+```
+
+---
+
+### 🔗 Posición en el Ecosistema DeFi
+
+| Fase | Repo | Rol |
+|:---:|:---|:---|
+| 1 | `Flash_Loans` | ⚡ Contrato Solidity — lógica on-chain |
+| 2 | `03_FlashLoanDriver` | 🚀 Driver local — pruebas aisladas |
+| 3 | `04_MarketScanner` | 📡 Radar — precios en tiempo real |
+| 4 | `05_ArbitrageBot` | 🤖 V1 — primer disparo real |
+| 5 | `06_MultiDexArbitrage` | 🧠 Ciclo completo con validación |
+| **6** | **`07_MultiDexBrain`** *(este)* | **🔄 V2 — arquitectura refinada y escalable** |
+| 7 | `09_ProfitBrain` | 💰 Controlador Mainnet — gestión de riesgo |
+| 8 | `10_RealPriceBrain` | 🎯 Cerebro — detección automática de spreads |
+| 9 | `13_SniperBot` | 🏹 Sniper — captura tokens nuevos en BSC |
+
+---
+
+### ⚖️ Disclaimer
+
+Este proyecto es **exclusivamente para fines educativos e investigación DeFi**. Los autores no son responsables de pérdidas financieras ni daños derivados del uso de este software.
+
+---
+
+### 🧑‍💻 Autor
+
+**Héctor Oviedo** — Backend Developer & DeFi Researcher
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/hectorob/)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/HEO-80)
+
+---
+---
+
+## 🇬🇧 English Version
+
+### 📈 Why does this repository exist?
+
+`07_MultiDexBrain` is the **direct evolution of `06_MultiDexArbitrage`**. It keeps the same battle-tested core — gas estimation, synchronous execution and receipt validation — but with a cleaner architecture ready to scale toward more complex versions of the ecosystem.
+
+> Each repo in this series is a step on the ladder. `06` proved the cycle worked. `07` consolidates it before adding more complexity.
+
+---
+
+### 🔄 06 vs 07 — What changed?
+
+| Feature | `06_MultiDexArbitrage` | `07_MultiDexBrain` *(this)* |
+|:---|:---|:---|
+| Execution core | ✅ Functional | ✅ Refactored |
+| Separation of concerns | Basic | Improved |
+| Ready to scale | Limited | ✅ Base for v08+ |
+| Project structure | Flat | Organized by modules |
+| `.env` config | ✅ | ✅ |
+
+---
+
+### ⚙️ Execution Flow
+```
+Program.cs
+    │
+    ├── 1. Load credentials (.env)
+    │       └── ALCHEMY_URL · PRIVATE_KEY · BOT_ADDRESS
+    │
+    ├── 2. Prior gas estimation
+    │       └── EstimateGasAsync()
+    │           ├── Simulates TX before broadcasting
+    │           └── Prevents failed transactions
+    │
+    ├── 3. Synchronous execution
+    │       └── SendTransactionAndWaitForReceiptAsync()
+    │           ├── Build + sign + broadcast TX
+    │           └── Wait for mined block confirmation
+    │
+    └── 4. Receipt evaluation
+            ├── Status = 1 ✅ → arbitrage executed with profit
+            └── Status = 0 ❌ → automatic revert → funds protected
+```
+
+---
+
+### 🚀 Setup & Execution
+
+**1. Create `.env` in project root**
+```env
+ALCHEMY_URL=https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY
+PRIVATE_KEY=YOUR_PRIVATE_KEY
+BOT_ADDRESS=0x_YOUR_CONTRACT_ADDRESS
+```
+
+**2. Run**
+```bash
+dotnet run
+```
+
+---
+
+### 🔗 Position in the DeFi Ecosystem
+
+| Phase | Repo | Role |
+|:---:|:---|:---|
+| 1 | `Flash_Loans` | ⚡ Solidity contract — on-chain logic |
+| 2 | `03_FlashLoanDriver` | 🚀 Local driver — isolated testing |
+| 3 | `04_MarketScanner` | 📡 Radar — real-time price reading |
+| 4 | `05_ArbitrageBot` | 🤖 V1 — first real trigger |
+| 5 | `06_MultiDexArbitrage` | 🧠 Full cycle with validation |
+| **6** | **`07_MultiDexBrain`** *(this)* | **🔄 V2 — refined, scalable architecture** |
+| 7 | `09_ProfitBrain` | 💰 Mainnet controller — risk management |
+| 8 | `10_RealPriceBrain` | 🎯 Brain — automatic spread detection |
+| 9 | `13_SniperBot` | 🏹 Sniper — captures new tokens on BSC |
+
+---
+
+### ⚖️ Disclaimer
+
+This project is for **educational and DeFi research purposes only**. The authors are not responsible for financial losses or damages from using this software.
+
+---
+
+### 🧑‍💻 Author
+
+**Héctor Oviedo** — Backend Developer & DeFi Researcher
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/hectorob/)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/HEO-80)
+
+---
+
+<div align="center">
+  <sub>Built with ☕ and DeFi research · <strong>Héctor Oviedo</strong> · Zaragoza, España</sub>
+</div>
